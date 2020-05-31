@@ -9,8 +9,9 @@ const rl = readline.createInterface({
     output: process.stdout
 })
 var http = require('http')
-var {listenPort} = require('./config.json')
+var {listenPort, tickLength} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
+var requiredAssets = ["404.html", "supportedFileTypes.json", "unsupportedFileType.html"]
 console.log("Started".brightGreen)
 
 http.createServer(function (req, res) {
@@ -107,3 +108,19 @@ process.stdin.on('keypress', function(ch, key){
         stop()
     }
 })
+
+// Check for missing files
+setTimeout(function () {
+    let foundFiles = fs.readdirSync("./assets")
+    let missing = Array()
+    requiredAssets.forEach(function(item){
+        if(!foundFiles.includes(item)){
+            missing.push(item)
+        }
+    })
+    if(missing.length > 0){
+        missing.forEach(function(item){
+            console.log("MISSING ITEM ".brightRed+item)
+        })
+    }
+}, tickLength*1000)
