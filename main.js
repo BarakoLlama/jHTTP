@@ -39,8 +39,19 @@ http.createServer(function (req, res) {
         }
         if(req.url == "/sys/tree"){
             if(allowSystemTree){
+                let beforeParse = dree.parse("./html")
+                let afterParse
+                let validCharacters = Array("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+                "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V" ,"W", "X", "Y", "Z", ".", "\n", " ", "/", ">", "<")
+                let processingPart = 0
+                while(processingPart < beforeParse.length){
+                    if(validCharacters.includes(beforeParse.substr(processingPart, 1))){
+                        afterParse = afterParse + beforeParse.substr(processingPart, 1)
+                    }
+                    processingPart++
+                }
                 res.writeHead(200, {"Content-Type":"text/plain"})
-                res.write(dree.parse("./html"))
+                res.write(afterParse)
                 res.end()
             }else{
                 res.writeHead(403, {"Content-Type":"text/html"})
