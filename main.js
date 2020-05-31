@@ -4,26 +4,45 @@ const request = require('request')
 const readline = require('readline')
 const colors = require('colors')
 const fs = require('fs')
+const url = require('url')
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 })
 var http = require('http')
-var {listenPort, tickLength} = require('./config.json')
+var {listenPort, tickLength, allowSystemURLs} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
-var requiredAssets = ["404.html", "supportedFileTypes.json", "unsupportedFileType.html"]
+var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
+var requiredAssets = ["404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html"]
 console.log("Started".brightGreen)
 
 http.createServer(function (req, res) {
     console.log(("RESPONDING ".brightGreen)+req.url)
     let noError = true
+    let query = url.parse(req.url, true).query
+    // Ensure URL doesn't end with /
+    if(!res.writableEnded && req.url.endsWith("/")){
+        res.writeHead(400, {"Content-Type":"text/html"})
+        res.write(fs.readFileSync("./assets/400.html"))
+        res.end()
+        console.log("WARNING ".brightYellow+"URL cannot end with a /")
+    }
+    // Check for system URLs
+    if(!res.writableEnded && systemURLS.includes(req.url) && allowSystemURLs){
+        if(req.url == "/sys/cookies"){
+            res.writeHead(200, {"Content-Type":"text/plain"})
+            res.write("OK")
+            console.log(req.headers.cookie)
+            res.end()
+        }
+    }
     // index.html
     try {
         if(!req.url.includes(".")){
             var readDir = fs.readdirSync(("./html"+req.url))
         }
     }catch(e){
-        if(e){
+        if(e && !res.writableEnded){
             noError = false
             if(e.message.includes("no such file")){
                 let notFound = e.message.split("'")[1].replace("./html", "")
@@ -34,7 +53,7 @@ http.createServer(function (req, res) {
             }
         }
     }
-    if(noError && !req.url.includes(".")){
+    if(noError && !req.url.includes(".") && !res.writableEnded){
         if(readDir.includes("index.html")){
             res.writeHead(200, {"Content-Type":"text/html"})
             res.write(fs.readFileSync(("./html"+req.url+"/index.html")))

@@ -1,4 +1,5 @@
 {
     "listenPort":8080,
-    "tickLength":10
+    "tickLength":10,
+    "allowSystemURLs":true
 }
