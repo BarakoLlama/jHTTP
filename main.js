@@ -11,7 +11,7 @@ const rl = readline.createInterface({
     output: process.stdout
 })
 var http = require('http')
-var {listenPort, tickLength, allowSystemURLs, allowSystemTree} = require('./config.json')
+var {listenPort, tickLength, allowSystemURLs, allowSystemTree, allowCrawling} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
 var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
@@ -58,6 +58,15 @@ http.createServer(function (req, res) {
                 res.write(fs.readFileSync("./assets/403.html"))
                 res.end()
             }
+        }
+        if(req.url == "/robots.txt"){
+            res.writeHead(200, {"Content-Type":"text/plain"})
+            if(allowCrawling){
+                res.write("User-Agent: *\nAllow: /*")
+            }else{
+                res.write("User-Agent: *\nDisallow: /*")
+            }
+            res.end()
         }
     }
     // index.html

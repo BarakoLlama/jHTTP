@@ -2,5 +2,6 @@
     "listenPort":8080,
     "tickLength":10,
     "allowSystemURLs":true,
-    "allowSystemTree":true
+    "allowSystemTree":true,
+    "allowCrawling":true
 }
