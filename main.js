@@ -10,9 +10,17 @@ const rl = readline.createInterface({
 var http = require('http')
 var {listenPort} = require('./config.json')
 console.log("Started".brightGreen)
+
 http.createServer(function (req, res) {
     console.log("Responded to a request".brightGreen)
     res.writeHead(200, {'Content-Type':'text/html'})
-    res.write("Hello World!")
+    res.write("Hello World!\n"+req.url)
     res.end()
 }).listen(listenPort)
+
+keypress(process.stdin)
+process.stdin.on('keypress', function(ch, key){
+    if(key && key.name == 'r' && key.ctrl){
+        stop()
+    }
+})
