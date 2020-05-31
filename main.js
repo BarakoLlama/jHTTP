@@ -5,15 +5,17 @@ const readline = require('readline')
 const colors = require('colors')
 const fs = require('fs')
 const url = require('url')
+const dree = require('dree')
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 })
 var http = require('http')
-var {listenPort, tickLength, allowSystemURLs} = require('./config.json')
+var {listenPort, tickLength, allowSystemURLs, allowSystemTree} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
 var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
-var requiredAssets = ["404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html"]
+var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
+"500.html")
 console.log("Started".brightGreen)
 
 http.createServer(function (req, res) {
@@ -34,6 +36,17 @@ http.createServer(function (req, res) {
             res.write("OK")
             console.log(req.headers.cookie)
             res.end()
+        }
+        if(req.url == "/sys/tree"){
+            if(allowSystemTree){
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                res.write(dree.parse("./html"))
+                res.end()
+            }else{
+                res.writeHead(403, {"Content-Type":"text/html"})
+                res.write(fs.readFileSync("./assets/403.html"))
+                res.end()
+            }
         }
     }
     // index.html
