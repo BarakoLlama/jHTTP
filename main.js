@@ -18,10 +18,24 @@ var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFi
 "500.html")
 console.log("Started".brightGreen)
 
+function readCookies(request = http.IncomingMessage){
+    let rawData = request.headers.cookie
+    if((rawData == undefined) || (rawData == "") || (rawData == null)){return JSON.parse("{}")}
+    let splitData = rawData.split(";")
+    let jsonData = "{"
+    splitData.forEach(function(line){
+        let splitLine = line.split("=")
+        jsonData = jsonData + '"' + splitLine[0] + '":"' + splitLine[1] + '",'
+    })
+    jsonData = jsonData.substr(0, (jsonData.length - 1)) + "}"
+    return JSON.parse(jsonData)
+}
+
 http.createServer(function (req, res) {
     console.log(("RESPONDING ".brightGreen)+req.url)
     let noError = true
     let query = url.parse(req.url, true).query
+    let cookies = readCookies(req)
     // Ensure URL doesn't end with /
     if(!res.writableEnded && req.url.endsWith("/")){
         res.writeHead(400, {"Content-Type":"text/html"})
@@ -32,9 +46,8 @@ http.createServer(function (req, res) {
     // Check for system URLs
     if(!res.writableEnded && systemURLS.includes(req.url) && allowSystemURLs){
         if(req.url == "/sys/cookies"){
-            res.writeHead(200, {"Content-Type":"text/plain"})
-            res.write("OK")
-            console.log(req.headers.cookie)
+            res.writeHead(200, {"Content-Type":"text/html"})
+            res.write(JSON.stringify(cookies))
             res.end()
         }
         if(req.url == "/sys/tree"){
