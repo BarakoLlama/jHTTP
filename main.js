@@ -15,7 +15,7 @@ var {listenPort, tickLength, allowSystemURLs, allowSystemTree, allowCrawling} = 
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
 var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
-"500.html")
+"500.html", "systemHome.html")
 console.log("Started".brightGreen)
 
 function readCookies(request = http.IncomingMessage){
@@ -37,7 +37,7 @@ http.createServer(function (req, res) {
     let query = url.parse(req.url, true).query
     let cookies = readCookies(req)
     // Ensure URL doesn't end with /
-    if(!res.writableEnded && req.url.endsWith("/")){
+    if(!res.writableEnded && req.url.endsWith("/") && !(req.url == "/")){
         res.writeHead(400, {"Content-Type":"text/html"})
         res.write(fs.readFileSync("./assets/400.html"))
         res.end()
@@ -81,6 +81,19 @@ http.createServer(function (req, res) {
             }
             res.end()
         }
+        if(req.url == "/sys"){
+            res.writeHead(200, {"Content-Type":"text/html"})
+            let part = fs.readFileSync("./assets/systemHome.html") + "\n<p>"
+            part = part + systemURLS.toString()
+            part = part + "</p>"
+            res.write(part)
+            res.end()
+        }
+    }
+    if(!res.writableEnded && systemURLS.includes(req.url) && !allowSystemURLs){
+        res.writeHead(403, {"Content-Type":"text/html"})
+        res.write(fs.readFileSync("./assets/403.html"))
+        res.end()
     }
     // index.html
     try {
