@@ -67,6 +67,29 @@ http.createServer(function (req, res) {
             res.end()
         }
     }
+    // any.txt
+    if(!res.writableEnded && req.url.endsWith(".txt")){
+        noError = true
+        try {
+            var file = fs.readFileSync(("./html"+req.url))
+        }catch(e){
+            if(e){
+                if(e.message.includes("no such file")){
+                    noError = false
+                    let notFound = e.message.split("'")[1].replace("./html", "")
+                    console.log("WARNING ".brightYellow+"Invalid request given: "+notFound)
+                    res.writeHead(404, {'Content-Type':'text/html'})
+                    res.write(fs.readFileSync("./assets/404.html"))
+                    res.end()
+                }
+            }
+        }
+        if(noError){
+            res.writeHead(200, {"Content-Type":"text/plain"})
+            res.write(fs.readFileSync(("./html"+req.url)))
+            res.end()
+        }
+    }
     // Check for unsupported file type
     if(!res.writableEnded && req.url.includes(".")){
         let fileType = req.url.split(".")[1]
