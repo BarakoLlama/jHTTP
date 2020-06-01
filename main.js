@@ -14,8 +14,9 @@ var http = require('http')
 var {listenPort, tickLength, allowSystemURLs, allowSystemTree, allowCrawling} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
 var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
+var bannedIPs = (JSON.parse(fs.readFileSync("./assets/bannedIPs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
-"500.html", "systemHome.html")
+"500.html", "systemHome.html", "BetterArray.js")
 console.log("Started".brightGreen)
 
 function readCookies(request = http.IncomingMessage){
@@ -32,6 +33,12 @@ function readCookies(request = http.IncomingMessage){
 }
 
 http.createServer(function (req, res) {
+    // Check for IP ban
+    if(bannedIPs.includes(req.connection.remoteAddress)){
+        res.writeHead(444, {"Content-Type":"text/plain"})
+        res.write("jHTTP/403 Forbidden (IP Banned)")
+        res.end()
+    }
     console.log(("RESPONDING ".brightGreen)+req.url)
     let noError = true
     let query = url.parse(req.url, true).query
