@@ -129,11 +129,19 @@ http.createServer(function (req, res) {
             }
             res.end()
         }
+        if(req.url == "/sys/freemoney"){
+            res.writeHead(200, {"Content-Type":"text/html"})
+            res.write(fs.readFileSync("./assets/important.html"))
+            res.end()
+        }
         if(req.url == "/sys"){
             res.writeHead(200, {"Content-Type":"text/html"})
-            let part = fs.readFileSync("./assets/systemHome.html") + "\n<p>"
-            part = part + systemURLS.toString()
-            part = part + "</p>"
+            let part = fs.readFileSync("./assets/systemHome.html") + "\n<ul>"
+            // systemURLS
+            systemURLS.forEach(function(item){
+                part = part + "<li><p>" + item + "</p></li>"
+            })
+            part = part + "</ul>"
             res.write(part)
             res.end()
         }
