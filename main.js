@@ -152,7 +152,7 @@ http.createServer(function (req, res) {
         }catch(e){
             // Nothing is required if not found.
         }
-        let htmlContent = '<ul><li><a href="/">Home directory</a></li>'
+        let htmlContent = '<ul><li><a href="/">Home directory</a></li><li><a href="javascript:history.back()">Back</a></li>'
         readDirec.forEach(function(item){
             let link = req.url + "/" + item
             htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
