@@ -168,6 +168,32 @@ http.createServer(function (req, res) {
         res.write(htmlContent)
         res.end()
     }
+    // Does the directory exist but index.html isnt there? Then show directory as a default.
+    let readDirecX = Array("<NOTHING>")
+    try {
+        readDirecX = fs.readdirSync("./html"+req.url)
+    }catch(e){
+        // Nothing is required if not found.
+    }
+    if(!readDirecX.includes("<NOTHING>") && !readDirecX.includes("index.html")){
+        let readDirec = Array()
+        try {
+            readDirec = fs.readdirSync("./html"+req.url)
+        }catch(e){
+            // Nothing is required if not found.
+        }
+        let htmlContent = '<h1 style="text-align:center">This directory does not have an index.</h1><h3 style="text-align:center">Here are some files instead!</h3>'
+        htmlContent = htmlContent + '<ul><li><a href="/">Home directory</a></li><li><a href="javascript:history.back()">Back</a></li>'
+        readDirec.forEach(function(item){
+            let link = req.url + "/" + item
+            if(req.url == "/"){link = "/" + item}
+            htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
+        })
+        htmlContent = htmlContent + "</ul>"
+        res.writeHead(200, {"content-Type":"text/html"})
+        res.write(htmlContent)
+        res.end()
+    }
     // index.html
     try {
         if(!req.url.includes(".")){
