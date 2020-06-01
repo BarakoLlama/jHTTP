@@ -388,7 +388,13 @@ http.createServer(function (req, res) {
             res.end()
         }
     }
-}).listen(listenPort)
+}).listen(listenPort).on('error', (e) => {
+    if(e){
+        if(e.message.includes("permission denied")){console.log("ERROR ".brightRed+"Permission denied. Try using a different port. Press Ctrl+R to restart.")}else{
+            console.log("ERROR ".brightRed+"Unknown Error\n"+e.message)
+        }
+    }
+})
 
 keypress(process.stdin)
 process.stdin.on('keypress', function(ch, key){
