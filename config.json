@@ -4,6 +4,6 @@
     "allowSystemURLs":true,
     "allowSystemTree":true,
     "allowCrawling":true,
-    "maxConnectionsPerMinute":120,
+    "maxConnectionsPerMinute":480,
     "logIpConnections":false
 }
