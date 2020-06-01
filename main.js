@@ -172,7 +172,6 @@ http.createServer(function (req, res) {
             noError = false
             if(e.message.includes("no such file")){
                 let notFound = e.message.split("'")[1].replace("./html", "")
-                console.log("WARNING ".brightYellow+"Invalid request given: "+notFound)
                 res.writeHead(404, {'Content-Type':'text/html'})
                 res.write(fs.readFileSync("./assets/404.html"))
                 res.end()
@@ -200,7 +199,6 @@ http.createServer(function (req, res) {
                 if(e.message.includes("no such file")){
                     noError = false
                     let notFound = e.message.split("'")[1].replace("./html", "")
-                    console.log("WARNING ".brightYellow+"Invalid request given: "+notFound)
                     res.writeHead(404, {'Content-Type':'text/html'})
                     res.write(fs.readFileSync("./assets/404.html"))
                     res.end()
@@ -223,7 +221,6 @@ http.createServer(function (req, res) {
                 if(e.message.includes("no such file")){
                     noError = false
                     let notFound = e.message.split("'")[1].replace("./html", "")
-                    console.log("WARNING ".brightYellow+"Invalid request given: "+notFound)
                     res.writeHead(404, {'Content-Type':'text/html'})
                     res.write(fs.readFileSync("./assets/404.html"))
                     res.end()
@@ -246,7 +243,6 @@ http.createServer(function (req, res) {
                 if(e.message.includes("no such file")){
                     noError = false
                     let notFound = e.message.split("'")[1].replace("./html", "")
-                    console.log("WARNING ".brightYellow+"Invalid request given: "+notFound)
                     res.writeHead(404, {'Content-Type':'text/html'})
                     res.write(fs.readFileSync("./assets/404.html"))
                     res.end()
