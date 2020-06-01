@@ -3,5 +3,6 @@
     "tickLength":10,
     "allowSystemURLs":true,
     "allowSystemTree":true,
-    "allowCrawling":true
+    "allowCrawling":true,
+    "maxConnectionsPerMinute":120
 }

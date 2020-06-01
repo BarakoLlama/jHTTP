@@ -11,12 +11,14 @@ const rl = readline.createInterface({
     output: process.stdout
 })
 var http = require('http')
-var {listenPort, tickLength, allowSystemURLs, allowSystemTree, allowCrawling} = require('./config.json')
+var {listenPort, tickLength, allowSystemURLs, allowSystemTree, allowCrawling, maxConnectionsPerMinute} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
 var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var bannedIPs = (JSON.parse(fs.readFileSync("./assets/bannedIPs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
-"500.html", "systemHome.html", "BetterArray.js")
+"500.html", "systemHome.html")
+var ddosIPs = Array()
+var ddosStacks = Array()
 console.log("Started".brightGreen)
 
 function readCookies(request = http.IncomingMessage){
@@ -33,10 +35,44 @@ function readCookies(request = http.IncomingMessage){
 }
 
 http.createServer(function (req, res) {
+    // Write to DDOS data
+    if(ddosIPs.includes(req.connection.remoteAddress)){
+        // Find ID
+        let processingPart = 0
+        let foundID = 0
+        while(processingPart < ddosIPs.length){
+            if(ddosIPs[processingPart] == req.connection.remoteAddress){
+                foundID = processingPart
+            }
+            processingPart++
+        }
+        // Add 1 to stacks
+        processingPart = 0
+        let newArray = Array()
+        while(processingPart < ddosStacks.length){
+            if(processingPart == foundID){
+                newArray.push(ddosStacks[processingPart] + 1)
+            }else{
+                newArray.push(ddosStacks[processingPart])
+            }
+            processingPart++
+        }
+        ddosStacks = newArray
+        // Is current connections over maximum allowed? If so, block connection.
+        if(ddosStacks[foundID] > (maxConnectionsPerMinute/6)){
+            res.writeHead(444, {"Content-Type":"text/plain"})
+            res.write("jHTTP/444 No response (Too many connections too fast, please wait!)")
+            res.end()
+            console.log("WARNING ".brightYellow+"Too many connections from IP too fast: "+req.connection.remoteAddress)
+        }
+    }else{
+        ddosIPs.push(req.connection.remoteAddress)
+        ddosStacks.push(1)
+    }
     // Check for IP ban
     if(bannedIPs.includes(req.connection.remoteAddress)){
         res.writeHead(444, {"Content-Type":"text/plain"})
-        res.write("jHTTP/403 Forbidden (IP Banned)")
+        res.write("jHTTP/444 No response (IP Banned)")
         res.end()
     }
     console.log(("RESPONDING ".brightGreen)+req.url)
@@ -209,3 +245,8 @@ setTimeout(function () {
         })
     }
 }, tickLength*1000)
+// Clear DDOSing profiles
+setTimeout(function () {
+    ddosIPs = Array()
+    ddosStacks = Array()
+}, 10000)
