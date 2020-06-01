@@ -144,12 +144,19 @@ http.createServer(function (req, res) {
         res.end()
     }
     // Check for directory settings
-    let directorySettingsJson = JSON.parse('{"viewAsDirectory":false,"directoryFooter":false}')
+    let directorySettingsJson = JSON.parse('{"viewAsDirectory":false,"directoryFooter":false,"hidden":false}')
     try {
         directorySettingsJson = JSON.parse(fs.readFileSync("./html"+req.url+"/directorySettings.json"))
     }catch(e){
         // Nothing needed here.
     }
+    // Is the directory marked as hidden?
+    if(directorySettingsJson.hidden && !res.writableEnded){
+        res.writeHead(404, {"content-Type":"text/html"})
+        res.write(fs.readFileSync("./assets/404.html"))
+        res.end()
+    }
+    // Otherwise continue normally
     if(directorySettingsJson.viewAsDirectory && !res.writableEnded){
         let readDirec = Array()
         try {
@@ -164,7 +171,7 @@ http.createServer(function (req, res) {
             htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
         })
         htmlContent = htmlContent + "</ul>"
-        res.writeHead(200, {"content-Type":"text/html"})
+        res.writeHead(200, {"Content-Type":"text/html"})
         res.write(htmlContent)
         res.end()
     }
@@ -175,7 +182,7 @@ http.createServer(function (req, res) {
     }catch(e){
         // Nothing is required if not found.
     }
-    if(!readDirecX.includes("<NOTHING>") && !readDirecX.includes("index.html")){
+    if(!readDirecX.includes("<NOTHING>") && !readDirecX.includes("index.html") && !res.writableEnded){
         let readDirec = Array()
         try {
             readDirec = fs.readdirSync("./html"+req.url)
@@ -190,7 +197,7 @@ http.createServer(function (req, res) {
             htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
         })
         htmlContent = htmlContent + "</ul>"
-        res.writeHead(200, {"content-Type":"text/html"})
+        res.writeHead(200, {"Content-Type":"text/html"})
         res.write(htmlContent)
         res.end()
     }

@@ -1,4 +1,5 @@
 {
     "viewAsDirectory":false,
-    "directoryFooter":true
+    "directoryFooter":true,
+    "hidden":false
 }
