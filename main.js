@@ -262,7 +262,6 @@ http.createServer(function (req, res) {
             if(e){
                 if(e.message.includes("no such file")){
                     noError = false
-                    let notFound = e.message.split("'")[1].replace("./html", "")
                     res.writeHead(404, {'Content-Type':'text/html'})
                     res.write(fs.readFileSync("./assets/404.html"))
                     res.end()
@@ -284,7 +283,6 @@ http.createServer(function (req, res) {
             if(e){
                 if(e.message.includes("no such file")){
                     noError = false
-                    let notFound = e.message.split("'")[1].replace("./html", "")
                     res.writeHead(404, {'Content-Type':'text/html'})
                     res.write(fs.readFileSync("./assets/404.html"))
                     res.end()
@@ -306,7 +304,6 @@ http.createServer(function (req, res) {
             if(e){
                 if(e.message.includes("no such file")){
                     noError = false
-                    let notFound = e.message.split("'")[1].replace("./html", "")
                     res.writeHead(404, {'Content-Type':'text/html'})
                     res.write(fs.readFileSync("./assets/404.html"))
                     res.end()
@@ -315,6 +312,69 @@ http.createServer(function (req, res) {
         }
         if(noError){
             res.writeHead(200, {"Content-Type":"text/plain"})
+            res.write(fs.readFileSync("./html"+req.url))
+            res.end()
+        }
+    }
+    // any.jpg
+    if(!res.writableEnded && req.url.endsWith(".jpg")){
+        noError = true
+        try {
+            var file = fs.readFileSync("./html"+req.url)
+        }catch(e){
+            if(e){
+                if(e.message.includes("no such file")){
+                    noError = false
+                    res.writeHead(404, {'Content-Type':'text/html'})
+                    res.write(fs.readFileSync("./assets/404.html"))
+                    res.end()
+                }
+            }
+        }
+        if(noError){
+            res.writeHead(200, {"Content-Type":"image/jpeg"})
+            res.write(fs.readFileSync("./html"+req.url))
+            res.end()
+        }
+    }
+    // any.png
+    if(!res.writableEnded && req.url.endsWith(".png")){
+        noError = true
+        try {
+            var file = fs.readFileSync("./html"+req.url)
+        }catch(e){
+            if(e){
+                if(e.message.includes("no such file")){
+                    noError = false
+                    res.writeHead(404, {'Content-Type':'text/html'})
+                    res.write(fs.readFileSync("./assets/404.html"))
+                    res.end()
+                }
+            }
+        }
+        if(noError){
+            res.writeHead(200, {"Content-Type":"image/jpeg"})
+            res.write(fs.readFileSync("./html"+req.url))
+            res.end()
+        }
+    }
+    // any.gif
+    if(!res.writableEnded && req.url.endsWith(".gif")){
+        noError = true
+        try {
+            var file = fs.readFileSync("./html"+req.url)
+        }catch(e){
+            if(e){
+                if(e.message.includes("no such file")){
+                    noError = false
+                    res.writeHead(404, {'Content-Type':'text/html'})
+                    res.write(fs.readFileSync("./assets/404.html"))
+                    res.end()
+                }
+            }
+        }
+        if(noError){
+            res.writeHead(200, {"Content-Type":"image/gif"})
             res.write(fs.readFileSync("./html"+req.url))
             res.end()
         }
