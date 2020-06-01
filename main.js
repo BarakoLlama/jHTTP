@@ -12,6 +12,7 @@ const rl = readline.createInterface({
 })
 var http = require('http')
 var {listenPort, tickLength, allowSystemURLs, allowSystemTree, allowCrawling, maxConnectionsPerMinute} = require('./config.json')
+var {logIpConnections} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
 var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var bannedIPs = (JSON.parse(fs.readFileSync("./assets/bannedIPs.json"))).data
@@ -68,6 +69,10 @@ http.createServer(function (req, res) {
     }else{
         ddosIPs.push(req.connection.remoteAddress)
         ddosStacks.push(1)
+    }
+    // Log IP
+    if(logIpConnections){
+        console.log("LOG ".grey+"IP "+req.connection.remoteAddress)
     }
     // Check for IP ban
     if(bannedIPs.includes(req.connection.remoteAddress)){
@@ -145,7 +150,7 @@ http.createServer(function (req, res) {
     }catch(e){
         // Nothing needed here.
     }
-    if(directorySettingsJson.viewAsDirectory){
+    if(directorySettingsJson.viewAsDirectory && !res.writableEnded){
         let readDirec = Array()
         try {
             readDirec = fs.readdirSync("./html"+req.url)
@@ -290,6 +295,9 @@ setTimeout(function () {
 }, tickLength*1000)
 // Clear DDOSing profiles
 setTimeout(function () {
+    if(ddosIPs.length > 0){
+        console.log("INFO ".brightCyan+"Cleared anti-DDOS profiles.")
+    }
     ddosIPs = Array()
     ddosStacks = Array()
 }, 10000)
