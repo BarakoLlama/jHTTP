@@ -492,7 +492,7 @@ process.stdin.on('keypress', function(ch, key){
 })
 
 // Check for missing files
-setTimeout(function () {
+setInterval(function () {
     let foundFiles = fs.readdirSync("./assets")
     let missing = Array()
     requiredAssets.forEach(function(item){
@@ -507,10 +507,10 @@ setTimeout(function () {
     }
 }, tickLength*1000)
 // Clear DDOSing profiles
-setTimeout(function () {
+setInterval(function () {
     if(ddosIPs.length > 0){
         console.log("INFO ".brightCyan+"Cleared anti-DDOS profiles.")
     }
-    ddosIPs = Array()
-    ddosStacks = Array()
+    ddosIPs = []
+    ddosStacks = []
 }, 10000)
