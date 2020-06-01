@@ -5,5 +5,6 @@
     "allowSystemTree":true,
     "allowCrawling":true,
     "maxConnectionsPerMinute":480,
-    "logIpConnections":false
+    "logIpConnections":false,
+    "throttledConnectionTimeout":15
 }
