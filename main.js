@@ -63,7 +63,7 @@ http.createServer(function (req, res) {
             res.writeHead(444, {"Content-Type":"text/plain"})
             res.write("jHTTP/444 No response (Too many connections too fast, please wait!)")
             res.end()
-            console.log("WARNING ".brightYellow+"Too many connections from IP too fast: "+req.connection.remoteAddress)
+            console.log("WARNING ".brightYellow+"Too many connections from IP too fast! "+req.connection.remoteAddress)
         }
     }else{
         ddosIPs.push(req.connection.remoteAddress)
@@ -136,6 +136,30 @@ http.createServer(function (req, res) {
     if(!res.writableEnded && systemURLS.includes(req.url) && !allowSystemURLs){
         res.writeHead(403, {"Content-Type":"text/html"})
         res.write(fs.readFileSync("./assets/403.html"))
+        res.end()
+    }
+    // Check for directory settings
+    let directorySettingsJson = JSON.parse('{"viewAsDirectory":false}')
+    try {
+        directorySettingsJson = JSON.parse(fs.readFileSync("./html"+req.url+"/directorySettings.json"))
+    }catch(e){
+        // Nothing needed here.
+    }
+    if(directorySettingsJson.viewAsDirectory){
+        let readDirec = Array()
+        try {
+            readDirec = fs.readdirSync("./html"+req.url)
+        }catch(e){
+            // Nothing is required if not found.
+        }
+        let htmlContent = '<ul><li><a href="/">Home directory</a></li>'
+        readDirec.forEach(function(item){
+            let link = req.url + "/" + item
+            htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
+        })
+        htmlContent = htmlContent + "</ul>"
+        res.writeHead(200, {"content-Type":"text/html"})
+        res.write(htmlContent)
         res.end()
     }
     // index.html
