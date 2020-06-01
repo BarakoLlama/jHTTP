@@ -144,7 +144,7 @@ http.createServer(function (req, res) {
         res.end()
     }
     // Check for directory settings
-    let directorySettingsJson = JSON.parse('{"viewAsDirectory":false}')
+    let directorySettingsJson = JSON.parse('{"viewAsDirectory":false,"directoryFooter":false}')
     try {
         directorySettingsJson = JSON.parse(fs.readFileSync("./html"+req.url+"/directorySettings.json"))
     }catch(e){
@@ -160,6 +160,7 @@ http.createServer(function (req, res) {
         let htmlContent = '<ul><li><a href="/">Home directory</a></li><li><a href="javascript:history.back()">Back</a></li>'
         readDirec.forEach(function(item){
             let link = req.url + "/" + item
+            if(req.url == "/"){link = "/" + item}
             htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
         })
         htmlContent = htmlContent + "</ul>"
@@ -186,7 +187,24 @@ http.createServer(function (req, res) {
     if(noError && !req.url.includes(".") && !res.writableEnded){
         if(readDir.includes("index.html")){
             res.writeHead(200, {"Content-Type":"text/html"})
-            res.write(fs.readFileSync(("./html"+req.url+"/index.html")))
+            let mainHtml = fs.readFileSync(("./html"+req.url+"/index.html"))
+            if(directorySettingsJson.directoryFooter){
+                let readDirec = Array()
+                try {
+                    readDirec = fs.readdirSync("./html"+req.url)
+                }catch(e){
+                    // Nothing is required if not found.
+                }
+                let htmlContent = '<footer><hr class="rounded"><ul><li><a href="/">Home directory</a></li><li><a href="javascript:history.back()">Back</a></li>'
+                readDirec.forEach(function(item){
+                    let link = req.url + "/" + item
+                    if(req.url == "/"){link = "/" + item}
+                    htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
+                })
+                htmlContent = htmlContent + "</ul></footer>"
+                mainHtml = mainHtml + htmlContent
+            }
+            res.write(mainHtml)
             res.end()
         }else{
             res.writeHead(404, {"Content-Type":"text/html"})

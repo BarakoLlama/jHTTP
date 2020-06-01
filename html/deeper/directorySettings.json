@@ -1,3 +1,4 @@
 {
-    "viewAsDirectory":true
+    "viewAsDirectory":true,
+    "directoryFooter":false
 }
