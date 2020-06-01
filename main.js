@@ -379,6 +379,50 @@ http.createServer(function (req, res) {
             res.end()
         }
     }
+    // any.mp3
+    if(!res.writableEnded && req.url.endsWith(".mp3")){
+        noError = true
+        try {
+            var file = fs.readFileSync("./html"+req.url)
+        }catch(e){
+            if(e){
+                if(e.message.includes("no such file")){
+                    noError = false
+                    res.writeHead(404, {'Content-Type':'text/html'})
+                    res.write(fs.readFileSync("./assets/404.html"))
+                    res.end()
+                }
+            }
+        }
+        if(noError){
+            let toWrite = '<audio autoplay="autoplay" controls="controls"><source src="'+req.url+'src"/></audio>'
+            res.writeHead(200, {"Content-Type":"text/html"})
+            res.write(toWrite)
+            res.end()
+        }
+    }
+    if(!res.writableEnded && req.url.endsWith(".mp3src")){ // Support for any.mp3
+        noError = true
+        try {
+            let urlFix = req.url.replace(".mp3src", ".mp3")
+            var file = fs.readFileSync("./html"+urlFix)
+        }catch(e){
+            if(e){
+                if(e.message.includes("no such file")){
+                    noError = false
+                    res.writeHead(404, {'Content-Type':'text/html'})
+                    res.write(fs.readFileSync("./assets/404.html"))
+                    res.end()
+                }
+            }
+        }
+        if(noError){
+            res.writeHead(200, {"Content-Type":"audio/basic"})
+            let urlFix = req.url.replace(".mp3src", ".mp3")
+            res.write(fs.readFileSync("./html"+urlFix))
+            res.end()
+        }
+    }
     // Check for unsupported file type
     if(!res.writableEnded && req.url.includes(".")){
         let fileType = req.url.split(".")[1]
