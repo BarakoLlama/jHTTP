@@ -138,7 +138,7 @@ http.createServer(function (req, res) {
             }
             if(req.url.split("?")[0] == "/sys"){
                 res.writeHead(200, {"Content-Type":"text/html"})
-                let part = fs.readFileSync("./assets/systemHome.html") + "\n<ul>"
+                let part = fs.readFileSync("./assets/systemHome.html") + "\n<ul><li><p>/query</p></li>"
                 // systemURLS
                 systemURLS.forEach(function(item){
                     part = part + "<li><p>" + item + "</p></li>"
