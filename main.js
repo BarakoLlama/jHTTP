@@ -81,7 +81,7 @@ http.createServer(function (req, res) {
             res.write("jHTTP/444 No response (IP Banned)")
             res.end()
         }
-        console.log(("RESPONDING ".brightGreen)+req.url)
+        console.log(("RESPONDING ".brightGreen)+req.url.split("?")[0])
         let noError = true
         let query = url.parse(req.url, true).query
         let cookies = readCookies(req)
@@ -93,13 +93,13 @@ http.createServer(function (req, res) {
             console.log("WARNING ".brightYellow+"URL cannot end with a /")
         }
         // Check for system URLs
-        if(!res.writableEnded && systemURLS.includes(req.url) && allowSystemURLs){
+        if(!res.writableEnded && systemURLS.includes(req.url.split("?")[0]) && allowSystemURLs){
             if(req.url == "/sys/cookies"){
                 res.writeHead(200, {"Content-Type":"text/html"})
                 res.write(JSON.stringify(cookies))
                 res.end()
             }
-            if(req.url == "/sys/tree"){
+            if(req.url.split("?")[0] == "/sys/tree"){
                 if(allowSystemTree){
                     let beforeParse = dree.parse("./html")
                     let afterParse
@@ -121,7 +121,7 @@ http.createServer(function (req, res) {
                     res.end()
                 }
             }
-            if(req.url == "/robots.txt"){
+            if(req.url.split("?")[0] == "/robots.txt"){
                 res.writeHead(200, {"Content-Type":"text/plain"})
                 if(allowCrawling){
                     res.write("User-Agent: *\nAllow: /*")
@@ -130,12 +130,12 @@ http.createServer(function (req, res) {
                 }
                 res.end()
             }
-            if(req.url == "/sys/freemoney"){
+            if(req.url.split("?")[0] == "/sys/freemoney"){
                 res.writeHead(200, {"Content-Type":"text/html"})
                 res.write(fs.readFileSync("./assets/important.html"))
                 res.end()
             }
-            if(req.url == "/sys"){
+            if(req.url.split("?")[0] == "/sys"){
                 res.writeHead(200, {"Content-Type":"text/html"})
                 let part = fs.readFileSync("./assets/systemHome.html") + "\n<ul>"
                 // systemURLS
@@ -147,7 +147,7 @@ http.createServer(function (req, res) {
                 res.end()
             }
         }
-        if(!res.writableEnded && systemURLS.includes(req.url) && !allowSystemURLs){
+        if(!res.writableEnded && systemURLS.includes(req.url.split("?")[0]) && !allowSystemURLs){
             res.writeHead(403, {"Content-Type":"text/html"})
             res.write(fs.readFileSync("./assets/403.html"))
             res.end()
@@ -155,7 +155,7 @@ http.createServer(function (req, res) {
         // Check for directory settings
         let directorySettingsJson = JSON.parse('{"viewAsDirectory":false,"directoryFooter":false,"hidden":false}')
         try {
-            directorySettingsJson = JSON.parse(fs.readFileSync("./html"+req.url+"/directorySettings.json"))
+            directorySettingsJson = JSON.parse(fs.readFileSync("./html"+req.url.split("?")[0]+"/directorySettings.json"))
         }catch(e){
             // Nothing needed here.
         }
@@ -169,14 +169,14 @@ http.createServer(function (req, res) {
         if(directorySettingsJson.viewAsDirectory && !res.writableEnded){
             let readDirec = Array()
             try {
-                readDirec = fs.readdirSync("./html"+req.url)
+                readDirec = fs.readdirSync("./html"+req.url.split("?")[0])
             }catch(e){
                 // Nothing is required if not found.
             }
             let htmlContent = '<ul><li><a href="/">Home directory</a></li><li><a href="javascript:history.back()">Back</a></li>'
             readDirec.forEach(function(item){
-                let link = req.url + "/" + item
-                if(req.url == "/"){link = "/" + item}
+                let link = req.url.split("?")[0] + "/" + item
+                if(req.url.split("?")[0] == "/"){link = "/" + item}
                 htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
             })
             htmlContent = htmlContent + "</ul>"
@@ -187,22 +187,22 @@ http.createServer(function (req, res) {
         // Does the directory exist but index.html isnt there? Then show directory as a default.
         let readDirecX = Array("<NOTHING>")
         try {
-            readDirecX = fs.readdirSync("./html"+req.url)
+            readDirecX = fs.readdirSync("./html"+req.url.split("?")[0])
         }catch(e){
             // Nothing is required if not found.
         }
         if(!readDirecX.includes("<NOTHING>") && !readDirecX.includes("index.html") && !res.writableEnded){
             let readDirec = Array()
             try {
-                readDirec = fs.readdirSync("./html"+req.url)
+                readDirec = fs.readdirSync("./html"+req.url.split("?")[0])
             }catch(e){
                 // Nothing is required if not found.
             }
             let htmlContent = '<h1 style="text-align:center">This directory does not have an index.</h1><h3 style="text-align:center">Here are some files instead!</h3>'
             htmlContent = htmlContent + '<ul><li><a href="/">Home directory</a></li><li><a href="javascript:history.back()">Back</a></li>'
             readDirec.forEach(function(item){
-                let link = req.url + "/" + item
-                if(req.url == "/"){link = "/" + item}
+                let link = req.url.split("?")[0].split("?")[0] + "/" + item
+                if(req.url.split("?")[0] == "/"){link = "/" + item}
                 htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
             })
             htmlContent = htmlContent + "</ul>"
@@ -212,8 +212,8 @@ http.createServer(function (req, res) {
         }
         // index.html
         try {
-            if(!req.url.includes(".")){
-                var readDir = fs.readdirSync(("./html"+req.url))
+            if(!req.url.split("?")[0].includes(".")){
+                var readDir = fs.readdirSync(("./html"+req.url.split("?")[0]))
             }
         }catch(e){
             if(e && !res.writableEnded){
@@ -226,21 +226,21 @@ http.createServer(function (req, res) {
                 }
             }
         }
-        if(noError && !req.url.includes(".") && !res.writableEnded){
+        if(noError && !req.url.split("?")[0].includes(".") && !res.writableEnded){
             if(readDir.includes("index.html")){
                 res.writeHead(200, {"Content-Type":"text/html"})
-                let mainHtml = fs.readFileSync(("./html"+req.url+"/index.html"))
+                let mainHtml = fs.readFileSync(("./html"+req.url.split("?")[0]+"/index.html"))
                 if(directorySettingsJson.directoryFooter){
                     let readDirec = Array()
                     try {
-                        readDirec = fs.readdirSync("./html"+req.url)
+                        readDirec = fs.readdirSync("./html"+req.url.split("?")[0])
                     }catch(e){
                         // Nothing is required if not found.
                     }
                     let htmlContent = '<footer><hr class="rounded"><ul><li><a href="/">Home directory</a></li><li><a href="javascript:history.back()">Back</a></li>'
                     readDirec.forEach(function(item){
-                        let link = req.url + "/" + item
-                        if(req.url == "/"){link = "/" + item}
+                        let link = req.url.split("?")[0] + "/" + item
+                        if(req.url.split("?")[0] == "/"){link = "/" + item}
                         htmlContent = htmlContent + '<li><a href="' + link + '">' + item + '</a></li>'
                     })
                     htmlContent = htmlContent + "</ul></footer>"
@@ -255,10 +255,10 @@ http.createServer(function (req, res) {
             }
         }
         // any.html
-        if(!res.writableEnded && req.url.endsWith(".html")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".html")){
             noError = true
             try {
-                var file = fs.readFileSync(("./html"+req.url))
+                var file = fs.readFileSync(("./html"+req.url.split("?")[0]))
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -271,15 +271,15 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"text/html"})
-                res.write(fs.readFileSync(("./html"+req.url)))
+                res.write(fs.readFileSync(("./html"+req.url.split("?")[0])))
                 res.end()
             }
         }
         // any.txt
-        if(!res.writableEnded && req.url.endsWith(".txt")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".txt")){
             noError = true
             try {
-                var file = fs.readFileSync(("./html"+req.url))
+                var file = fs.readFileSync(("./html"+req.url.split("?")[0]))
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -292,15 +292,15 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"text/plain"})
-                res.write(fs.readFileSync(("./html"+req.url)))
+                res.write(fs.readFileSync(("./html"+req.url.split("?")[0])))
                 res.end()
             }
         }
         // any.json
-        if(!res.writableEnded && req.url.endsWith(".json")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".json")){
             noError = true
             try {
-                var file = fs.readFileSync("./html"+req.url)
+                var file = fs.readFileSync("./html"+req.url.split("?")[0])
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -313,15 +313,15 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"text/plain"})
-                res.write(fs.readFileSync("./html"+req.url))
+                res.write(fs.readFileSync("./html"+req.url.split("?")[0]))
                 res.end()
             }
         }
         // any.jpg
-        if(!res.writableEnded && req.url.endsWith(".jpg")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".jpg")){
             noError = true
             try {
-                var file = fs.readFileSync("./html"+req.url)
+                var file = fs.readFileSync("./html"+req.url.split("?")[0])
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -334,15 +334,15 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"image/jpeg"})
-                res.write(fs.readFileSync("./html"+req.url))
+                res.write(fs.readFileSync("./html"+req.url.split("?")[0]))
                 res.end()
             }
         }
         // any.png
-        if(!res.writableEnded && req.url.endsWith(".png")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".png")){
             noError = true
             try {
-                var file = fs.readFileSync("./html"+req.url)
+                var file = fs.readFileSync("./html"+req.url.split("?")[0])
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -355,15 +355,15 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"image/jpeg"})
-                res.write(fs.readFileSync("./html"+req.url))
+                res.write(fs.readFileSync("./html"+req.url.split("?")[0]))
                 res.end()
             }
         }
         // any.gif
-        if(!res.writableEnded && req.url.endsWith(".gif")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".gif")){
             noError = true
             try {
-                var file = fs.readFileSync("./html"+req.url)
+                var file = fs.readFileSync("./html"+req.url.split("?")[0])
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -376,15 +376,15 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"image/gif"})
-                res.write(fs.readFileSync("./html"+req.url))
+                res.write(fs.readFileSync("./html"+req.url.split("?")[0]))
                 res.end()
             }
         }
         // any.mp3
-        if(!res.writableEnded && req.url.endsWith(".mp3")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".mp3")){
             noError = true
             try {
-                var file = fs.readFileSync("./html"+req.url)
+                var file = fs.readFileSync("./html"+req.url.split("?")[0])
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -396,16 +396,16 @@ http.createServer(function (req, res) {
                 }
             }
             if(noError){
-                let toWrite = '<audio autoplay="autoplay" controls="controls"><source src="'+req.url+'src"/></audio>'
+                let toWrite = '<audio autoplay="autoplay" controls="controls"><source src="'+req.url.split("?")[0]+'src"/></audio>'
                 res.writeHead(200, {"Content-Type":"text/html"})
                 res.write(toWrite)
                 res.end()
             }
         }
-        if(!res.writableEnded && req.url.endsWith(".mp3src")){ // Support for any.mp3
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".mp3src")){ // Support for any.mp3
             noError = true
             try {
-                let urlFix = req.url.replace(".mp3src", ".mp3")
+                let urlFix = req.url.split("?")[0].replace(".mp3src", ".mp3")
                 var file = fs.readFileSync("./html"+urlFix)
             }catch(e){
                 if(e){
@@ -419,16 +419,16 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"audio/basic"})
-                let urlFix = req.url.replace(".mp3src", ".mp3")
+                let urlFix = req.url.split("?")[0].replace(".mp3src", ".mp3")
                 res.write(fs.readFileSync("./html"+urlFix))
                 res.end()
             }
         }
         // any.mp4
-        if(!res.writableEnded && req.url.endsWith(".mp4")){
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".mp4")){
             noError = true
             try {
-                var file = fs.readFileSync("./html"+req.url)
+                var file = fs.readFileSync("./html"+req.url.split("?")[0])
             }catch(e){
                 if(e){
                     if(e.message.includes("no such file")){
@@ -440,16 +440,16 @@ http.createServer(function (req, res) {
                 }
             }
             if(noError){
-                let toWrite = '<video controls="" height="288" width="512"><source src="'+req.url+'src" type="video/mp4" />Your browser does not support the video tag.</video>'
+                let toWrite = '<video controls="" height="288" width="512"><source src="'+req.url.split("?")[0]+'src" type="video/mp4" />Your browser does not support the video tag.</video>'
                 res.writeHead(200, {"Content-Type":"text/html"})
                 res.write(toWrite)
                 res.end()
             }
         }
-        if(!res.writableEnded && req.url.endsWith(".mp4src")){ // Support for any.mp4
+        if(!res.writableEnded && req.url.split("?")[0].endsWith(".mp4src")){ // Support for any.mp4
             noError = true
             try {
-                let urlFix = req.url.replace(".mp4src", ".mp4")
+                let urlFix = req.url.split("?")[0].replace(".mp4src", ".mp4")
                 var file = fs.readFileSync("./html"+urlFix)
             }catch(e){
                 if(e){
@@ -463,14 +463,14 @@ http.createServer(function (req, res) {
             }
             if(noError){
                 res.writeHead(200, {"Content-Type":"audio/basic"})
-                let urlFix = req.url.replace(".mp4src", ".mp4")
+                let urlFix = req.url.split("?")[0].replace(".mp4src", ".mp4")
                 res.write(fs.readFileSync("./html"+urlFix))
                 res.end()
             }
         }
         // Check for unsupported file type
-        if(!res.writableEnded && req.url.includes(".")){
-            let fileType = req.url.split(".")[1]
+        if(!res.writableEnded && req.url.split("?")[0].includes(".")){
+            let fileType = req.url.split("?")[0].split(".")[1]
             if(!supportedFileTypes.includes(fileType)){
                 res.writeHead(501, {"Content-Type":"text/html"})
                 res.write(fs.readFileSync("./assets/unsupportedFileType.html"))
