@@ -194,7 +194,6 @@ http.createServer(function (req, res) {
                 var queryEntry
                 var action
                 var toWrite
-                var caughtException = false
                 var settingsJson
                 try {
                     queryName = query.queryName
@@ -206,12 +205,17 @@ http.createServer(function (req, res) {
                     res.writeHead(500, {"Content-Type":"text/plain"})
                     res.write("err1")
                     res.end()
-                    caughtException = true
                     settingsJson = {}
                 }}
                 var readable = settingsJson.publicReadable
                 var writable = settingsJson.publicWritable
                 var hidden = settingsJson.publicHidden
+                // Anti-Injection Attack Implementation
+                if((queryName.includes(".") || queryEntry.includes(".")) && !res.writableEnded){
+                    res.writeHead(403, {"Content-Type":"text/html"})
+                    res.write(fs.readFileSync("./assets/403.html")+'<p style="text-align:center">jQuery attack detected.</p>')
+                    res.end()
+                }
                 // Ensure basic parameters
                 if(!res.writableEnded){
                     if((action == undefined) || ((action == "getPerms") && (queryName == undefined))){
@@ -224,6 +228,7 @@ http.createServer(function (req, res) {
                         res.end()
                     }
                 }
+                console.log("jQuery ".brightGreen+req.url.split("?")[1])
                 // Actions
                 if(!res.writableEnded){
                     if(hidden){
