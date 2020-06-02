@@ -6,5 +6,6 @@
     "allowCrawling":true,
     "maxConnectionsPerMinute":480,
     "logIpConnections":false,
-    "throttledConnectionTimeout":15
+    "throttledConnectionTimeout":15,
+    "allowQueryURLs":true
 }

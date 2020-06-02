@@ -12,10 +12,11 @@ const rl = readline.createInterface({
 })
 var http = require('http')
 var {listenPort, tickLength, allowSystemURLs, allowSystemTree, allowCrawling, maxConnectionsPerMinute} = require('./config.json')
-var {logIpConnections, throttledConnectionTimeout} = require('./config.json')
+var {logIpConnections, throttledConnectionTimeout, allowQueryURLs} = require('./config.json')
 var supportedFileTypes = (JSON.parse(fs.readFileSync("./assets/supportedFileTypes.json"))).data
 var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var bannedIPs = (JSON.parse(fs.readFileSync("./assets/bannedIPs.json"))).data
+var queryURLs = (JSON.parse(fs.readFileSync("./assets/queryURLs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
 "500.html", "systemHome.html")
 var ddosIPs = Array()
@@ -94,7 +95,7 @@ http.createServer(function (req, res) {
         }
         // Check for system URLs
         if(!res.writableEnded && systemURLS.includes(req.url.split("?")[0]) && allowSystemURLs){
-            if(req.url == "/sys/cookies"){
+            if(req.url.split("?")[0] == "/sys/cookies"){
                 res.writeHead(200, {"Content-Type":"text/html"})
                 res.write(JSON.stringify(cookies))
                 res.end()
@@ -151,6 +152,153 @@ http.createServer(function (req, res) {
             res.writeHead(403, {"Content-Type":"text/html"})
             res.write(fs.readFileSync("./assets/403.html"))
             res.end()
+        }
+        // Check for query URLs
+        if(!res.writableEnded && queryURLs.includes(req.url.split("?")[0]) && allowQueryURLs){
+            if(req.url.split("?")[0] == "/query"){
+                let resolution = "VALID ENDPOINTS\n"
+                queryURLs.forEach(function(item){
+                    resolution = resolution + item + "\n"
+                })
+                resolution = resolution + "\nVALID RESPONSES\nerr1 - Invalid syntax\nerr2 - No query with given name\nerr3 - No entry with given name\n"
+                resolution = resolution + "err4 - Permission denied\nerr5 - Unknown error\nyay - Success\nOther responses indicate data.\n"
+                resolution = resolution + "\nExample API request:\n/query/api?queryName=users&queryEntry=admins&action=write&toWrite=hello%20world\n"
+                resolution = resolution + "Example permissions request:\n/query/api?queryName=users&queryEntry=null&action=getPerms\n\n"
+                resolution = resolution + "API VARIABLES\nqueryName - Name of the database\nqueryEntry - An entry in the database\naction - [read, write, getPerms]\n"
+                resolution = resolution + "(OPTIONAL) toWrite - Data to write to the database (only required if action=write)"
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                res.write(resolution)
+                res.end()
+            }
+            if(req.url.split("?")[0] == "/query/list"){
+                let resolution = "LIST OF QUERIES\n"
+                let dirs = fs.readdirSync("./query")
+                dirs.forEach(function(queryx){
+                    let hiddenFunc = (JSON.parse(fs.readFileSync("./query/"+queryx+"/settings.json"))).publicHidden
+                    if(!hiddenFunc){
+                        resolution = resolution + queryx + "\n"
+                    }
+                })
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                res.write(resolution)
+                res.end()
+            }
+            if(req.url.split("?")[0] == "/query/api"){
+                // Get parameters
+                var queryName
+                var queryEntry
+                var action
+                var toWrite
+                var caughtException = false
+                var settingsJson
+                try {
+                    queryName = query.queryName
+                    queryEntry = query.queryEntry
+                    action = query.action
+                    toWrite = query.toWrite
+                    settingsJson = JSON.parse(fs.readFileSync("./query/"+queryName+"/settings.json"))
+                }catch(e){if(e){
+                    res.writeHead(500, {"Content-Type":"text/plain"})
+                    res.write("err1")
+                    res.end()
+                    caughtException = true
+                    settingsJson = {}
+                }}
+                var readable = settingsJson.publicReadable
+                var writable = settingsJson.publicWritable
+                var hidden = settingsJson.publicHidden
+                // Ensure basic parameters
+                if(!res.writableEnded){
+                    if((action == undefined) || ((action == "getPerms") && (queryName == undefined))){
+                        res.writeHead(500, {"Content-Type":"text/plain"})
+                        res.write("err1")
+                        res.end()
+                    }else if((queryName == undefined) || (queryEntry == undefined) || ((action == "write") && (toWrite == undefined))){
+                        res.writeHead(500, {"Content-Type":"text/plain"})
+                        res.write("err1")
+                        res.end()
+                    }
+                }
+                // Actions
+                if(!res.writableEnded){
+                    if(hidden){
+                        res.writeHead(500, {"Content-Type":"text/plain"})
+                        res.write("err4")
+                        res.end()
+                    }else if((action == "read") || (action == "write") || (action == "getPerms")){
+                        var directoryRead
+                        try {
+                            directoryRead = fs.readdirSync("./query/"+queryName)
+                        }catch(e){
+                            if(e){
+                                if(e.message.includes("no such file")){
+                                    res.writeHead(500, {"Content-Type":"text/plain"})
+                                    res.write("err2")
+                                    res.end()
+                                }else{
+                                    res.writeHead(500, {"Content-Type":"text/plain"})
+                                    res.write("err5")
+                                    res.end()
+                                }
+                            }
+                        }
+                        if(!res.writableEnded){
+                            if(action == "read"){
+                                if(readable){
+                                    if(directoryRead.includes(queryEntry)){
+                                        res.writeHead(200, {"Content-Type":"text/plain"})
+                                        res.write(fs.readFileSync("./query/"+queryName+"/"+queryEntry))
+                                        res.end()
+                                    }else{
+                                        res.writeHead(500, {"Content-Type":"text/plain"})
+                                        res.write("err3")
+                                        res.end()
+                                    }
+                                }else{
+                                    res.writeHead(500, {"Content-Type":"text/plain"})
+                                    res.write("err4")
+                                    res.end()
+                                }
+                            }
+                            if(action == "write"){
+                                if(writable){
+                                    if(toWrite == undefined){
+                                        res.writeHead(500, {"Content-Type":"text/plain"})
+                                        res.write("err1")
+                                        res.end()
+                                    }else{
+                                        var fixedData
+                                        if(toWrite.includes("%")){
+                                            fixedData = decodeURI(toWrite)
+                                        }else{
+                                            fixedData = toWrite
+                                        }
+                                        fs.writeFileSync(("./query/"+queryName+"/"+queryEntry), fixedData)
+                                        res.writeHead(200, {"Content-Type":"text/plain"})
+                                        res.write("yay")
+                                        res.end()
+                                    }
+                                }else{
+                                    res.writeHead(500, {"Content-Type":"text/plain"})
+                                    res.write("err4")
+                                    res.end()
+                                }
+                            }
+                            if(action == "getPerms"){
+                                function strbool(bool = Boolean()){if(bool){return true}else{return false}}
+                                var dataToWrite = "readable:"+strbool(readable)+";\nwritable:"+strbool(writable)+";\nhidden:false;"
+                                res.writeHead(200, {"Content-Type":"text/plain"})
+                                res.write(dataToWrite)
+                                res.end()
+                            }
+                        }
+                    }else{
+                        res.writeHead(500, {"Content-Type":"text/plain"})
+                        res.write("err1")
+                        res.end()
+                    }
+                }
+            }
         }
         // Check for directory settings
         let directorySettingsJson = JSON.parse('{"viewAsDirectory":false,"directoryFooter":false,"hidden":false}')
@@ -498,6 +646,75 @@ keypress(process.stdin)
 process.stdin.on('keypress', function(ch, key){
     if(key && key.name == 'r' && key.ctrl){
         stop()
+    }
+    if(key && key.name == 'o' && key.ctrl){
+        rl.question('jHTTP> ', (answer) => {
+            let answersplit = answer.split(" ")
+            if(answersplit[0] == "help"){
+                console.log("jquery help".brightCyan)
+            }
+            if(answersplit[0] == "jquery"){
+                if(answersplit[1] == undefined){
+                    console.log("try 'jquery help'".brightCyan)
+                }
+                if(answersplit[1] == "help"){
+                    if(answersplit[2] == undefined){
+                        console.log("try 'jquery help [list, new, query]'".brightCyan)
+                    }
+                    if(answersplit[2] == "list"){
+                        console.log("jquery list - Lists available queries".brightCyan)
+                    }
+                    if(answersplit[2] == "new"){
+                        console.log("jquery new <name> <publicReadable?> <publicWritable?> <publicHidden?>- Creates a new query".brightCyan)
+                    }
+                    if(answersplit[2] == "query"){
+                        console.log("jquery query <name> [read, write] <entryName> OPTIONAL<data>".brightCyan)
+                    }
+                }
+                if(answersplit[1] == "list"){
+                    console.log(fs.readdirSync("./query"))
+                }
+                if(answersplit[1] == "new"){
+                    if((answersplit[2] == undefined) || (answersplit[3] == undefined) || (answersplit[4] == undefined) || (answersplit[5] == undefined)){
+                        console.log("ERROR ".brightRed+"Invalid command syntax")
+                    }else{
+                        fs.mkdirSync("./query/"+answersplit[2])
+                        let toWrite = ('{"publicReadable":'+answersplit[3]+',"publicWritable":'+answersplit[4]+',"publicHidden":'+answersplit[5]+'}')
+                        fs.writeFileSync(("./query/"+answersplit[2]+"/settings.json"), toWrite)
+                        console.log("Success!".brightGreen)
+                    }
+                }
+                if(answersplit[1] == "query"){
+                    if((answersplit[2] == undefined) || (answersplit[3] == undefined) || (answersplit[4] == undefined)){
+                        console.log("ERROR ".brightRed+"Invalid command syntax: Parameters need to be defined")
+                    }else if((answersplit[5] == undefined) && (answersplit[3] == "write")){
+                        console.log("ERROR ".brightRed+"Invalid command syntax: Parameter needs to be defined")
+                    }else if(!(answersplit[3] == "read") && !(answersplit[3] == "write")){
+                        console.log("ERROR ".brightRed+"Invalid command syntax: Parameter can only be read or write")
+                    }else{
+                        fs.readdir(("./query/"+answersplit[2]), (err, files) => {
+                            if(err){
+                                console.log("ERROR ".brightRed+"Query doesn't exist or access was denied")
+                            }else{
+                                if(answersplit[3] == "read"){
+                                    fs.readFile(("./query/"+answersplit[2]+"/"+answersplit[4]), (err, data) => {
+                                        if(err){
+                                            console.log("ERROR ".brightRed+"Query doesn't exist or access was denied")
+                                        }else{
+                                            console.log("QUERY "+answersplit[2]+" = "+data.toString())
+                                        }
+                                    })
+                                }else if(answersplit[3] == "write"){
+                                    let toWrite = answer.replace(("jquery query "+answersplit[2]+" "+answersplit[3]+" "+answersplit[4]+" "), "")
+                                    fs.writeFileSync(("./query/"+answersplit[2]+"/"+answersplit[4]), toWrite)
+                                    console.log("Success!".brightGreen)
+                                }
+                            }
+                        })
+                    }
+                }
+            }
+        })
     }
 })
 
