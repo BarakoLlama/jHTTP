@@ -2,10 +2,10 @@
     "listenPort":8080,
     "tickLength":10,
     "allowSystemURLs":true,
-    "allowSystemTree":true,
+    "allowSystemTree":false,
     "allowCrawling":true,
-    "maxConnectionsPerMinute":480,
+    "maxConnectionsPerMinute":100,
     "logIpConnections":false,
-    "throttledConnectionTimeout":15,
+    "throttledConnectionTimeout":30,
     "allowQueryURLs":true
 }
