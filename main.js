@@ -18,7 +18,7 @@ var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var bannedIPs = (JSON.parse(fs.readFileSync("./assets/bannedIPs.json"))).data
 var queryURLs = (JSON.parse(fs.readFileSync("./assets/queryURLs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
-"500.html", "systemHome.html")
+"500.html", "systemHome.html", "opensearch.xml")
 var ddosIPs = Array()
 var ddosStacks = Array()
 console.log("Started".brightGreen)
@@ -145,6 +145,11 @@ http.createServer(function (req, res) {
                 })
                 part = part + "</ul>"
                 res.write(part)
+                res.end()
+            }
+            if(req.url.split("?")[0] == "/opensearch.xml"){
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                res.write(fs.readFileSync("./assets/opensearch.xml"))
                 res.end()
             }
         }
@@ -651,7 +656,7 @@ process.stdin.on('keypress', function(ch, key){
         rl.question('jHTTP> ', (answer) => {
             let answersplit = answer.split(" ")
             if(answersplit[0] == "help"){
-                console.log("jquery help".brightCyan)
+                console.log("jquery help, jhttp [init]".brightCyan)
             }
             if(answersplit[0] == "jquery"){
                 if(answersplit[1] == undefined){
@@ -712,6 +717,42 @@ process.stdin.on('keypress', function(ch, key){
                             }
                         })
                     }
+                }
+            }
+            if(answersplit[0] == "jhttp"){
+                if(answersplit[1] == undefined){
+                    console.log("jhttp help".brightCyan)
+                }
+                if(answersplit[1] == "help"){
+                    if(answersplit[2] == undefined){
+                        console.log("jhttp help [init]".brightCyan)
+                    }
+                    if(answersplit[2] == "init"){
+                        console.log("jhttp init - Initiates opensearch.xml".brightCyan)
+                    }
+                }
+                if(answersplit[1] == "init"){
+                    var toWrite = '<?xml version="1.0" encoding="UTF-8" ?>\n<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">'
+                    rl.question("Name of website? ", (answer) => {
+                        toWrite = toWrite + "\n    <ShortName>" + answer + "</ShortName>"
+                        rl.question("Does this website have adult content? YES/NO ", (answer) => {
+                            let localAnswer = answer.toLowerCase()
+                            var fixed = 'true' // Will be assumed so that bots scan for adult content as a failsafe.
+                            if(localAnswer == "yes"){fixed = 'true'}
+                            if(localAnswer == "no"){fixed = 'false'}
+                            toWrite = toWrite + "\n    <AdultContent>" + fixed + "</AdultContent>"
+                            rl.question("Is this website in english? (YES) Otherwise write the two-digit country code (FR) ", (answer) => {
+                                if(answer.toLowerCase() == "yes"){
+                                    toWrite = toWrite + "\n    <Language>EN</Language>"
+                                }else{
+                                    toWrite = toWrite + "\n    <Language>" + answer.toUpperCase() + "</Language>"
+                                }
+                                toWrite = toWrite + '\n    <Developer>GitHub/BarakoLlama</Developer>\n</OpenSearchDescription>'
+                                fs.writeFileSync("./assets/opensearch.xml", toWrite)
+                                console.log("Success!".brightGreen)
+                            })
+                        })
+                    })
                 }
             }
         })
