@@ -18,7 +18,7 @@ var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var bannedIPs = (JSON.parse(fs.readFileSync("./assets/bannedIPs.json"))).data
 var queryURLs = (JSON.parse(fs.readFileSync("./assets/queryURLs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
-"500.html", "systemHome.html", "opensearch.xml")
+"500.html", "systemHome.html", "opensearch.xml", "401.html")
 var ddosIPs = Array()
 var ddosStacks = Array()
 console.log("Started".brightGreen)
