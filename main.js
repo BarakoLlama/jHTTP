@@ -6,6 +6,7 @@ const colors = require('colors')
 const fs = require('fs')
 const url = require('url')
 const dree = require('dree')
+const jAuth = require('./assets/jAuthorization.js')
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -18,7 +19,7 @@ var systemURLS = (JSON.parse(fs.readFileSync("./assets/systemURLs.json"))).data
 var bannedIPs = (JSON.parse(fs.readFileSync("./assets/bannedIPs.json"))).data
 var queryURLs = (JSON.parse(fs.readFileSync("./assets/queryURLs.json"))).data
 var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFileType.html", "systemURLs.json", "400.html", "200.html", "201.html", "204.html", "304.html", "403.html",
-"500.html", "systemHome.html", "opensearch.xml", "401.html")
+"500.html", "systemHome.html", "opensearch.xml", "401.html", "jAuthorization.js")
 var ddosIPs = Array()
 var ddosStacks = Array()
 console.log("Started".brightGreen)
