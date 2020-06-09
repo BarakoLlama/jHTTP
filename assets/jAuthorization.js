@@ -1,6 +1,6 @@
 exports.jAuth = {
     Token: class jAuthToken {
-        constructor(expirationInSeconds = Number(), maxUses = Number()){
+        constructor(expirationInSeconds = Number(), maxUses = Number(), scopesJson){
             if(expirationInSeconds == undefined){
                 throw new Error("expirationInSeconds must be defined.")
             }
@@ -10,6 +10,7 @@ exports.jAuth = {
             this.token = this.getNewToken()
             this.expiration = expirationInSeconds
             this.maxUses = maxUses
+            this.scopes = scopesJson
         }
         getNewToken(){
             let tokenChars = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
@@ -37,13 +38,11 @@ exports.jAuth = {
         }
     },
     Manager: class jAuthManager {
-        constructor(doLogging = Boolean(), expirationInSeconds = Number(), maxUsesPerToken = Number()){
+        constructor(expirationInSeconds = Number(), maxUsesPerToken = Number()){
             this.defMaxUses = Infinity
             this.defExpiration = 3600
-            this.doLogging = true
             if(expirationInSeconds !== undefined){this.defExpiration = expirationInSeconds}
             if(maxUsesPerToken !== undefined){this.defMaxUses = maxUsesPerToken}
-            if(doLogging !== undefined){this.doLogging = doLogging}
             this.tokens = []
             this.instance = exports.jAuth
         }

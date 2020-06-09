@@ -31,7 +31,7 @@ Number(): The maximum amount of times the token can be used before it is destroy
 ### Constructor example
 ```javascript
 const jAuth = require('jAuthorization.js')
-var myToken = new jAuth.jAuth.Token(600, Infinity)
+var myToken = new jAuth.jAuth.Token(600, Infinity, {"read":true})
 // Token expires after 10 minutes (600 seconds) and does not expire
 // no matter how many times it is used before the 10 minute mark.
 ```
@@ -41,6 +41,8 @@ String(): The actual token ID.
 Number(): The amount of seconds left before the token expires.
 ### Property: maxUses
 Number(): The amount of uses left before the token expires.
+### Property: scopes
+JSON(): The data that accompanies the token, such as read or write permissions.
 ### Method: getNewToken
 Creates a random token but does not use it as a new one.
 ```javascript
