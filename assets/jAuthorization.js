@@ -78,8 +78,9 @@ exports.jAuth = {
                     this.tokens = newTokenList
                     return JSON.stringify({"info":"Success."})
                 }
-            })
-            if(!found){return {"error":"There is no token with that ID."}}
+                processingPart++
+            }
+            return JSON.stringify({"error":"No token found with given ID."})
         }
         isTokenValid(tokenID = String()){
             this.tokens.forEach(function(token){
