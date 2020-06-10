@@ -181,7 +181,10 @@ http.createServer(function (req, res) {
                 res.end()
             }
             if(splurl == "/sys/tokenapi/revoke"){
-
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                var thing = tokenManager.revokeToken(query.id)
+                res.write(thing)
+                res.end()
             }
         }
         if(!res.writableEnded && systemURLS.includes(req.url.split("?")[0]) && !allowSystemURLs){

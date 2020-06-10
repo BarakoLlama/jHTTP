@@ -49,7 +49,6 @@ exports.jAuth = {
         newToken(){
             var newx = new this.instance.Token(this.defExpiration, this.defMaxUses)
             this.tokens.push(newx)
-            console.log(JSON.stringify(newx.toJSON()))
             return newx.toJSON()
         }
         getToken(tokenID = String()){
@@ -61,14 +60,23 @@ exports.jAuth = {
                 }
                 processingPart++
             }
+            return JSON.stringify({"error":"No token found with given ID."})
         }
         revokeToken(tokenID = String()){
-            var found = false
-            this.tokens.forEach(function(token){
-                if(token.token == tokenID){
-                    
-                    found = true
-                    return {"info":"Success."}
+            var processingPart = 0
+            while(processingPart < this.tokens.length){
+                var reference = this.tokens[processingPart]
+                if(reference.token == tokenID){
+                    var newTokenList = []
+                    this.tokens.forEach(function(item){
+                        if(item.token == tokenID){
+
+                        }else{
+                            newTokenList.push(item)
+                        }
+                    })
+                    this.tokens = newTokenList
+                    return JSON.stringify({"info":"Success."})
                 }
             })
             if(!found){return {"error":"There is no token with that ID."}}
