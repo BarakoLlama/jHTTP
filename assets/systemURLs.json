@@ -1,3 +1,4 @@
 {
-    "data":["/sys", "/sys/cookies", "/sys/tree", "/robots.txt", "/sys/freemoney", "/opensearch.xml"]
+    "data":["/sys", "/sys/cookies", "/sys/tree", "/robots.txt", "/sys/freemoney", "/opensearch.xml", "/sys/tokenapi",
+    "/sys/tokenapi/create", "/sys/tokenapi/get", "/sys/tokenapi/revoke"]
 }

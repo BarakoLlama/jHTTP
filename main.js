@@ -22,6 +22,7 @@ var requiredAssets = Array("404.html", "supportedFileTypes.json", "unsupportedFi
 "500.html", "systemHome.html", "opensearch.xml", "401.html", "jAuthorization.js")
 var ddosIPs = Array()
 var ddosStacks = Array()
+var tokenManager = new jAuth.jAuth.Manager(3600, 1000000)
 console.log("Started".brightGreen)
 
 function readCookies(request = http.IncomingMessage){
@@ -36,6 +37,15 @@ function readCookies(request = http.IncomingMessage){
     jsonData = jsonData.substr(0, (jsonData.length - 1)) + "}"
     return JSON.parse(jsonData)
 }
+
+setInterval(() => {
+    tokenManager.tokens.forEach(function(token){
+        token.expirationTick()
+        if(token.token == undefined){
+            tokenManager.revokeToken(token.token)
+        }
+    })
+}, 1000)
 
 http.createServer(function (req, res) {
     try {
@@ -96,12 +106,13 @@ http.createServer(function (req, res) {
         }
         // Check for system URLs
         if(!res.writableEnded && systemURLS.includes(req.url.split("?")[0]) && allowSystemURLs){
-            if(req.url.split("?")[0] == "/sys/cookies"){
+            var splurl = req.url.split("?")[0]
+            if(splurl == "/sys/cookies"){
                 res.writeHead(200, {"Content-Type":"text/html"})
                 res.write(JSON.stringify(cookies))
                 res.end()
             }
-            if(req.url.split("?")[0] == "/sys/tree"){
+            if(splurl == "/sys/tree"){
                 if(allowSystemTree){
                     let beforeParse = dree.parse("./html")
                     let afterParse
@@ -123,7 +134,7 @@ http.createServer(function (req, res) {
                     res.end()
                 }
             }
-            if(req.url.split("?")[0] == "/robots.txt"){
+            if(splurl == "/robots.txt"){
                 res.writeHead(200, {"Content-Type":"text/plain"})
                 if(allowCrawling){
                     res.write("User-Agent: *\nAllow: /*")
@@ -132,12 +143,12 @@ http.createServer(function (req, res) {
                 }
                 res.end()
             }
-            if(req.url.split("?")[0] == "/sys/freemoney"){
+            if(splurl == "/sys/freemoney"){
                 res.writeHead(200, {"Content-Type":"text/html"})
                 res.write(fs.readFileSync("./assets/important.html"))
                 res.end()
             }
-            if(req.url.split("?")[0] == "/sys"){
+            if(splurl == "/sys"){
                 res.writeHead(200, {"Content-Type":"text/html"})
                 let part = fs.readFileSync("./assets/systemHome.html") + "\n<ul><li><p>/query</p></li>"
                 // systemURLS
@@ -148,10 +159,29 @@ http.createServer(function (req, res) {
                 res.write(part)
                 res.end()
             }
-            if(req.url.split("?")[0] == "/opensearch.xml"){
+            if(splurl == "/opensearch.xml"){
                 res.writeHead(200, {"Content-Type":"text/plain"})
                 res.write(fs.readFileSync("./assets/opensearch.xml"))
                 res.end()
+            }
+            if(splurl == "/sys/tokenapi"){
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                res.write(fs.readFileSync("./assets/tokenapi.txt"))
+                res.end()
+            }
+            if(splurl == "/sys/tokenapi/create"){
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                res.write(JSON.stringify(tokenManager.newToken()))
+                res.end()
+            }
+            if(splurl == "/sys/tokenapi/get"){
+                res.writeHead(200, {"Content-Type":"text/plain"})
+                var thing = tokenManager.getToken(query.id)
+                res.write(thing)
+                res.end()
+            }
+            if(splurl == "/sys/tokenapi/revoke"){
+
             }
         }
         if(!res.writableEnded && systemURLS.includes(req.url.split("?")[0]) && !allowSystemURLs){

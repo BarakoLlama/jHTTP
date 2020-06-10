@@ -1,0 +1,7 @@
+All 3 API URLs other than /create use variable ID.
+
+/sys/tokenapi/create
+/sys/tokenapi/get
+/sys/tokenapi/revoke
+
+Example token:
